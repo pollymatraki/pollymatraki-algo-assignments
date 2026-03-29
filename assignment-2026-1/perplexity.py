@@ -19,7 +19,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def log_probs_from_logits_row(row):
+def log_probs_from_row(row):
     max_val = max(row)
     shifted = [x - max_val for x in row]
     log_sum_exp = math.log(sum(math.exp(x) for x in shifted))
@@ -47,16 +47,18 @@ def main():
     n_ctx = args.n_ctx
     begin_context_tokens = args.begin_context_tokens
 
+    max_window_tokens = n_ctx - 1
+
     total_nll = 0.0
     total_predicted_tokens = 0
 
     for i in range(0, len(tokens), stride):
         if i == 0:
             begin = 0
-            end = min(n_ctx, len(tokens))
+            end = min(max_window_tokens, len(tokens))
             context_len = begin_context_tokens
         else:
-            begin = max(i + stride - n_ctx, 0)
+            begin = max(i + stride - max_window_tokens, 0)
             end = min(i + stride, len(tokens))
             context_len = len(tokens[begin:i])
 
@@ -76,7 +78,7 @@ def main():
         for j in range(start_j, end_j):
             row = logits[j].tolist()
             target_token = window_with_bos[j + 1]
-            log_probs = log_probs_from_logits_row(row)
+            log_probs = log_probs_from_row(row)
             log_prob = log_probs[target_token]
 
             total_nll += -log_prob
