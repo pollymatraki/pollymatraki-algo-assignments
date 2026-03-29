@@ -37,36 +37,46 @@ def main():
 
     total_nll = 0.0
     total_tokens = 0
+    bos = tokenizer.bos_token_id
 
     for i in range(0, len(tokens), stride):
-        begin = max(i + stride - n_ctx, 0)
-        end = min(i + stride, len(tokens))
+      if i == 0:
+          begin = 0
+          end = min(n_ctx, len(tokens))
+          target_start = args.begin_context_tokens
+      else:
+          begin = max(i + stride - n_ctx, 0)
+          end = min(i + stride, len(tokens))
+          target_start = len(tokens[begin:i])
 
-        window = tokens[begin:end]
-        target_len = end - i
+    window = tokens[begin:end]
 
-        window_tensor = torch.tensor([window])
+    window = [bos] + window
 
-        with torch.no_grad():
-            logits = model(window_tensor).logits
+    window_tensor = torch.tensor([window])
 
-        logits = logits[0]
+    with torch.no_grad():
+        logits = model(window_tensor).logits
 
-        for j in range(len(window) - target_len, len(window) - 1):
-            row = logits[j].tolist()
-            target_token = window[j + 1]
+    logits = logits[0]
 
-            max_val = max(row)
-            shifted = [x - max_val for x in row]
+    for j in range(target_start, len(window) - 1):
+        row = logits[j].tolist()
+        target_token = window[j + 1]
 
-            log_sum_exp = math.log(sum(math.exp(x) for x in shifted))
+        max_val = max(row)
+        shifted = [x - max_val for x in row]
 
-            log_probs = [x - log_sum_exp for x in shifted]
+        log_sum_exp = math.log(sum(math.exp(x) for x in shifted))
 
-            log_prob = log_probs[target_token]
+        log_probs = [x - log_sum_exp for x in shifted]
 
-            total_nll += -log_prob
-            total_tokens += 1
+        log_prob = log_probs[target_token]
+
+        total_nll += -log_prob
+        total_tokens += 1
+
+
 
     nll = total_nll / total_tokens
     perplexity = math.exp(nll)
