@@ -57,11 +57,11 @@ def main():
             begin = 0
             end = min(begin_context_tokens + stride, len(tokens))
             end = min(end, max_window_tokens)
-            predict_from = begin_context_tokens
+            context_len = begin_context_tokens
         else:
             begin = max(i + stride - max_window_tokens, 0)
             end = min(i + stride, len(tokens))
-            predict_from = i - begin
+            context_len = i - begin
 
         window = tokens[begin:end]
         window_with_bos = [bos_token] + window
@@ -73,12 +73,13 @@ def main():
 
         logits = logits[0]
 
-        start_j = predict_from
+        start_j = context_len
         end_j = len(window_with_bos) - 1
 
         for j in range(start_j, end_j):
             row = logits[j].tolist()
             target_token = window_with_bos[j + 1]
+
             log_probs = log_probs_from_row(row)
             log_prob = log_probs[target_token]
 
