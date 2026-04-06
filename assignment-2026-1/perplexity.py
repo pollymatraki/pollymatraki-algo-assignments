@@ -19,11 +19,11 @@ def parse_args():
     return parser.parse_args()
 
 
-def log_probs_from_row(row):
+def target_log_prob_from_row(row, target_token):
     max_val = max(row)
     shifted = [x - max_val for x in row]
     log_sum_exp = math.log(sum(math.exp(x) for x in shifted))
-    return [x - log_sum_exp for x in shifted]
+    return shifted[target_token] - log_sum_exp
 
 
 def main():
@@ -46,35 +46,34 @@ def main():
     stride = args.stride
     n_ctx = args.n_ctx
     begin_context_tokens = args.begin_context_tokens
-
     max_window_tokens = n_ctx - 1
 
-    windows = []
-    for i in range(0, len(tokens), stride):
-        if i == 0:
-            begin = 0
-            end = min(begin_context_tokens + stride, len(tokens))
-            end = min(end, max_window_tokens)
-            context_len = begin_context_tokens
-        else:
-            begin = max(i + stride - max_window_tokens, 0)
-            end = min(i + stride, len(tokens))
-            context_len = i - begin
-
-        windows.append((begin, end, context_len))
+    num_tokens = len(tokens)
+    num_windows = (num_tokens + stride - 1) // stride
 
     lines = []
     lines.append(f"Computing perplexity for {args.input_file}...")
     lines.append("Tokenizing text...")
-    lines.append(f"Found {len(tokens)} tokens")
-    lines.append(f"Processing {len(tokens)} tokens in {len(windows)} window(s).")
+    lines.append(f"Found {num_tokens} tokens")
+    lines.append(f"Processing {num_tokens} tokens in {num_windows} window(s).")
 
     total_nll = 0.0
     total_predicted_tokens = 0
 
-    for idx, (begin, end, context_len) in enumerate(windows, start=1):
+    for idx, i in enumerate(range(0, num_tokens, stride), start=1):
+        if i == 0:
+            begin = 0
+            end = min(begin_context_tokens + stride, num_tokens)
+            end = min(end, max_window_tokens)
+            context_len = begin_context_tokens
+        else:
+            begin = max(i + stride - max_window_tokens, 0)
+            end = min(i + stride, num_tokens)
+            context_len = i - begin
+
         window = tokens[begin:end]
         window_with_bos = [bos_token] + window
+        window_len = len(window_with_bos)
 
         window_tensor = torch.tensor([window_with_bos])
 
@@ -82,24 +81,19 @@ def main():
             logits = model(window_tensor).logits
 
         logits = logits[0]
-
-        start_j = context_len
-        end_j = len(window_with_bos) - 1
-
         window_nll = 0.0
 
-        for j in range(start_j, end_j):
+        for j in range(context_len, window_len - 1):
             row = logits[j].tolist()
             target_token = window_with_bos[j + 1]
-            log_probs = log_probs_from_row(row)
-            log_prob = log_probs[target_token]
+            log_prob = target_log_prob_from_row(row, target_token)
 
             value = -log_prob
             window_nll += value
             total_nll += value
             total_predicted_tokens += 1
 
-        lines.append(f"Window {idx}/{len(windows)}: nll={window_nll:.4f}")
+        lines.append(f"Window {idx}/{num_windows}: nll={window_nll:.4f}")
 
     nll = total_nll / total_predicted_tokens
     perplexity = math.exp(nll)

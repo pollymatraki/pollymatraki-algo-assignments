@@ -1,1 +1,11 @@
-46.709880129411154
+Computing perplexity for nonsensical.txt...
+Tokenizing text...
+Found 2837 tokens
+Processing 2837 tokens in 6 window(s).
+Window 1/6: nll=2040.5759
+Window 2/6: nll=2040.5759
+Window 3/6: nll=1945.2066
+Window 4/6: nll=1863.3185
+Window 5/6: nll=1986.4610
+Window 6/6: nll=1029.1644
+Perplexity: 46.71
