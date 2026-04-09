@@ -73,17 +73,15 @@ def main():
 
         window = tokens[begin:end]
         window_with_bos = [bos_token] + window
-        window_len = len(window_with_bos)
 
         window_tensor = torch.tensor([window_with_bos])
 
         with torch.no_grad():
-            logits = model(window_tensor).logits
+            logits = model(window_tensor).logits[0]
 
-        logits = logits[0]
         window_nll = 0.0
 
-        for j in range(context_len, window_len - 1):
+        for j in range(context_len, len(window_with_bos) - 1):
             row = logits[j].tolist()
             target_token = window_with_bos[j + 1]
             log_prob = target_log_prob_from_row(row, target_token)
