@@ -19,6 +19,16 @@ def main():
     print("Directed:", directed)
     print("Graph file:", graph_file)
 
+    # 🔹 ΝΕΟ ΚΟΜΜΑ
+    try:
+        with open(graph_file, "r") as f:
+            lines = f.readlines()
+    except FileNotFoundError:
+        print("File not found")
+        return
+
+    print("Total lines:", len(lines))
+
 
 if __name__ == "__main__":
     main()
