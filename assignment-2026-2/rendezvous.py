@@ -2,7 +2,22 @@ import sys
 
 
 def main():
-    print("Rendezvous assignment")
+    args = sys.argv
+
+    directed = False
+
+    if len(args) < 2:
+        print("Usage: python rendezvous.py [-d] <graph_file>")
+        return
+
+    if args[1] == "-d":
+        directed = True
+        graph_file = args[2]
+    else:
+        graph_file = args[1]
+
+    print("Directed:", directed)
+    print("Graph file:", graph_file)
 
 
 if __name__ == "__main__":
