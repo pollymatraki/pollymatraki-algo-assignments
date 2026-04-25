@@ -23,6 +23,16 @@ def read_graph(graph_file):
 
     return num_nodes, num_edges, edges, alice_start, bob_start
 
+def build_graph(num_nodes, edges, directed):
+    graph = [[] for _ in range(num_nodes)]
+
+    for u, v in edges:
+        graph[u].append(v)
+        if not directed:
+            graph[v].append(u)
+
+    return graph
+
 
 def main():
     args = sys.argv
@@ -44,6 +54,12 @@ def main():
         print("File not found")
         return
 
+
+    graph = build_graph(num_nodes, edges, directed)
+    print("Adjacency list:")
+    for i in range(num_nodes):
+        print(i, "->", graph[i])
+        
     print("Directed:", directed)
     print("Nodes:", num_nodes)
     print("Edges:", num_edges)
