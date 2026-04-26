@@ -59,6 +59,24 @@ def bfs_with_parity(graph, start):
 
     return dist, parent
 
+def find_meeting_node(num_nodes, alice_dist, bob_dist):
+    best_node = -1
+    best_dist = float('inf')
+    best_parity = -1
+
+    for node in range(num_nodes):
+        for parity in [0, 1]:
+            da = alice_dist[node][parity]
+            db = bob_dist[node][parity]
+
+            if da != -1 and db != -1 and da == db:
+                if da < best_dist:
+                    best_dist = da
+                    best_node = node
+                    best_parity = parity
+
+    return best_node, best_dist, best_parity
+
 def main():
     args = sys.argv
     directed = False
@@ -97,7 +115,15 @@ def main():
 
     print("Alice distances:", alice_dist)
     print("Bob distances:", bob_dist)
+    
+    meeting_node, meeting_dist, parity = find_meeting_node(
+    num_nodes, alice_dist, bob_dist
+    )
 
+    if meeting_node != -1:
+        print("Meeting possible at node", meeting_node, "in", meeting_dist, "steps")
+    else:
+        print("No meeting is possible.")
 
 if __name__ == "__main__":
     main()
