@@ -1,4 +1,5 @@
 import sys
+from collections import deque
 
 
 def read_graph(graph_file):
@@ -33,6 +34,30 @@ def build_graph(num_nodes, edges, directed):
 
     return graph
 
+def bfs_with_parity(graph, start):
+    n = len(graph)
+
+    dist = [[-1, -1] for _ in range(n)]
+    parent = [[None, None] for _ in range(n)]
+
+    q = deque()
+    q.append((start, 0))
+
+    dist[start][0] = 0
+    parent[start][0] = (-1, -1)
+
+    while q:
+        node, parity = q.popleft()
+
+        for neighbor in graph[node]:
+            new_parity = 1 - parity
+
+            if dist[neighbor][new_parity] == -1:
+                dist[neighbor][new_parity] = dist[node][parity] + 1
+                parent[neighbor][new_parity] = (node, parity)
+                q.append((neighbor, new_parity))
+
+    return dist, parent
 
 def main():
     args = sys.argv
@@ -66,6 +91,12 @@ def main():
     print("Alice:", alice_start)
     print("Bob:", bob_start)
     print("Edge list:", edges)
+
+    alice_dist, alice_parent = bfs_with_parity(graph, alice_start)
+    bob_dist, bob_parent = bfs_with_parity(graph, bob_start)
+
+    print("Alice distances:", alice_dist)
+    print("Bob distances:", bob_dist)
 
 
 if __name__ == "__main__":
