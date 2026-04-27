@@ -104,6 +104,41 @@ def print_meeting(alice_path, bob_path, meeting_node):
     print(f"Meeting at node {meeting_node} at time step {steps - 1}.")
 
 
+def bfs_path(graph, start, target):
+    n = len(graph)
+    visited = [False] * n
+    parent = [-1] * n
+
+    q = deque()
+    q.append(start)
+    visited[start] = True
+
+    while q:
+        node = q.popleft()
+
+        if node == target:
+            break
+
+        for neighbor in graph[node]:
+            if not visited[neighbor]:
+                visited[neighbor] = True
+                parent[neighbor] = node
+                q.append(neighbor)
+
+    if not visited[target]:
+        return []
+
+    path = []
+    current = target
+
+    while current != -1:
+        path.append(current)
+        current = parent[current]
+
+    path.reverse()
+    return path
+
+
 def main():
     args = sys.argv
     directed = False
@@ -147,13 +182,16 @@ def main():
     num_nodes, alice_dist, bob_dist
     )
 
+    simple_path = bfs_path(graph, alice_start, bob_start)
+    print("Simple path:", simple_path)
+
     if meeting_node != -1:
         print("Meeting possible at node", meeting_node, "in", meeting_dist, "steps")
         alice_path = reconstruct_path(alice_parent, meeting_node, parity)
         bob_path = reconstruct_path(bob_parent, meeting_node, parity)
 
         print_meeting(alice_path, bob_path, meeting_node)
-        
+
     else:
         print("No meeting is possible.")
 
