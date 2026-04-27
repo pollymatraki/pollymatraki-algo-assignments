@@ -95,6 +95,15 @@ def reconstruct_path(parent, node, parity):
     path.reverse()
     return path
 
+def print_meeting(alice_path, bob_path, meeting_node):
+    steps = len(alice_path)
+
+    for i in range(steps):
+        print(f"{i}: Alice at {alice_path[i]}, Bob at {bob_path[i]}")
+
+    print(f"Meeting at node {meeting_node} at time step {steps - 1}.")
+
+
 def main():
     args = sys.argv
     directed = False
@@ -140,6 +149,11 @@ def main():
 
     if meeting_node != -1:
         print("Meeting possible at node", meeting_node, "in", meeting_dist, "steps")
+        alice_path = reconstruct_path(alice_parent, meeting_node, parity)
+        bob_path = reconstruct_path(bob_parent, meeting_node, parity)
+
+        print_meeting(alice_path, bob_path, meeting_node)
+        
     else:
         print("No meeting is possible.")
 
