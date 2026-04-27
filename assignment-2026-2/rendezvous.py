@@ -77,6 +77,24 @@ def find_meeting_node(num_nodes, alice_dist, bob_dist):
 
     return best_node, best_dist, best_parity
 
+def reconstruct_path(parent, node, parity):
+    path = []
+
+    current_node = node
+    current_parity = parity
+
+    while current_node != -1:
+        path.append(current_node)
+
+        previous = parent[current_node][current_parity]
+        if previous is None:
+            break
+
+        current_node, current_parity = previous
+
+    path.reverse()
+    return path
+
 def main():
     args = sys.argv
     directed = False
