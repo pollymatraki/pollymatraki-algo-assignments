@@ -6,19 +6,14 @@ def read_graph(graph_file):
     with open(graph_file, "r") as f:
         lines = f.readlines()
 
-    first_line = lines[0].split()
-    num_nodes = int(first_line[0])
-    num_edges = int(first_line[1])
+    num_nodes, num_edges = map(int, lines[0].split())
 
     edges = []
-
     for line in lines[1:1 + num_edges]:
-        x, y = line.split()
-        edges.append((int(x), int(y)))
+        u, v = map(int, line.split())
+        edges.append((u, v))
 
-    last_line = lines[1 + num_edges].split()
-    alice_start = int(last_line[0])
-    bob_start = int(last_line[1])
+    alice_start, bob_start = map(int, lines[1 + num_edges].split())
 
     return num_nodes, num_edges, edges, alice_start, bob_start
 
@@ -74,8 +69,8 @@ def find_meeting_node(num_nodes, alice_dist, bob_dist):
 
             if da != -1 and db != -1 and da == db:
                 if da < best_dist:
-                    best_dist = da
                     best_node = node
+                    best_dist = da
                     best_parity = parity
 
     return best_node, best_dist, best_parity
@@ -83,18 +78,12 @@ def find_meeting_node(num_nodes, alice_dist, bob_dist):
 
 def reconstruct_path(parent, node, parity):
     path = []
-
     current_node = node
     current_parity = parity
 
     while current_node != -1:
         path.append(current_node)
-        previous = parent[current_node][current_parity]
-
-        if previous is None:
-            break
-
-        current_node, current_parity = previous
+        current_node, current_parity = parent[current_node][current_parity]
 
     path.reverse()
     return path
