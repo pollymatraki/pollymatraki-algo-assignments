@@ -13,16 +13,15 @@ def read_graph(graph_file):
     edges = []
 
     for line in lines[1:1 + num_edges]:
-        parts = line.split()
-        x = int(parts[0])
-        y = int(parts[1])
-        edges.append((x, y))
+        x, y = line.split()
+        edges.append((int(x), int(y)))
 
     last_line = lines[1 + num_edges].split()
     alice_start = int(last_line[0])
     bob_start = int(last_line[1])
 
     return num_nodes, num_edges, edges, alice_start, bob_start
+
 
 def build_graph(num_nodes, edges, directed):
     graph = [[] for _ in range(num_nodes)]
@@ -32,11 +31,14 @@ def build_graph(num_nodes, edges, directed):
         if not directed:
             graph[v].append(u)
 
+    for neighbors in graph:
+        neighbors.sort()
+
     return graph
+
 
 def bfs_with_parity(graph, start):
     n = len(graph)
-
     dist = [[-1, -1] for _ in range(n)]
     parent = [[None, None] for _ in range(n)]
 
@@ -59,9 +61,10 @@ def bfs_with_parity(graph, start):
 
     return dist, parent
 
+
 def find_meeting_node(num_nodes, alice_dist, bob_dist):
     best_node = -1
-    best_dist = float('inf')
+    best_dist = float("inf")
     best_parity = -1
 
     for node in range(num_nodes):
@@ -77,6 +80,7 @@ def find_meeting_node(num_nodes, alice_dist, bob_dist):
 
     return best_node, best_dist, best_parity
 
+
 def reconstruct_path(parent, node, parity):
     path = []
 
@@ -85,8 +89,8 @@ def reconstruct_path(parent, node, parity):
 
     while current_node != -1:
         path.append(current_node)
-
         previous = parent[current_node][current_parity]
+
         if previous is None:
             break
 
@@ -95,13 +99,12 @@ def reconstruct_path(parent, node, parity):
     path.reverse()
     return path
 
-def print_meeting(alice_path, bob_path, meeting_node):
-    steps = len(alice_path)
 
-    for i in range(steps):
+def print_meeting(alice_path, bob_path, meeting_node):
+    for i in range(len(alice_path)):
         print(f"{i}: Alice at {alice_path[i]}, Bob at {bob_path[i]}")
 
-    print(f"Meeting at node {meeting_node} at time step {steps - 1}.")
+    print(f"Meeting at node {meeting_node} at time step {len(alice_path) - 1}.")
 
 
 def bfs_path(graph, start, target):
@@ -139,12 +142,63 @@ def bfs_path(graph, start, target):
     return path
 
 
+def add_edge(graph, u, v, directed):
+    if v not in graph[u]:
+        graph[u].append(v)
+        graph[u].sort()
+
+    if not directed:
+        if u not in graph[v]:
+            graph[v].append(u)
+            graph[v].sort()
+
+
+def fix_undirected_graph(graph, alice_start, bob_start):
+    path = bfs_path(graph, alice_start, bob_start)
+
+    if not path:
+        return []
+
+    if len(path) == 2:
+        a = path[0]
+        b = path[1]
+
+        for neighbor in graph[b]:
+            if neighbor != a:
+                return [(a, neighbor)]
+
+        return []
+
+    middle_index = len(path) // 2
+    meeting_node = path[middle_index]
+    previous_node = path[middle_index - 2]
+
+    return [(previous_node, meeting_node)]
+
+
+def solve_current_graph(graph, num_nodes, alice_start, bob_start):
+    alice_dist, alice_parent = bfs_with_parity(graph, alice_start)
+    bob_dist, bob_parent = bfs_with_parity(graph, bob_start)
+
+    meeting_node, meeting_dist, parity = find_meeting_node(
+        num_nodes, alice_dist, bob_dist
+    )
+
+    if meeting_node == -1:
+        return False
+
+    alice_path = reconstruct_path(alice_parent, meeting_node, parity)
+    bob_path = reconstruct_path(bob_parent, meeting_node, parity)
+
+    print_meeting(alice_path, bob_path, meeting_node)
+    return True
+
+
 def main():
     args = sys.argv
     directed = False
 
     if len(args) < 2:
-        print("Usage: py rendezvous.py [-d] <graph_file>")
         return
 
     if args[1] == "-d":
@@ -153,47 +207,36 @@ def main():
     else:
         graph_file = args[1]
 
-    try:
-        num_nodes, num_edges, edges, alice_start, bob_start = read_graph(graph_file)
-    except FileNotFoundError:
-        print("File not found")
+    num_nodes, num_edges, edges, alice_start, bob_start = read_graph(graph_file)
+    graph = build_graph(num_nodes, edges, directed)
+
+    if solve_current_graph(graph, num_nodes, alice_start, bob_start):
         return
 
+    print("No meeting is possible.")
 
-    graph = build_graph(num_nodes, edges, directed)
-    print("Adjacency list:")
-    for i in range(num_nodes):
-        print(i, "->", graph[i])
-        
-    print("Directed:", directed)
-    print("Nodes:", num_nodes)
-    print("Edges:", num_edges)
-    print("Alice:", alice_start)
-    print("Bob:", bob_start)
-    print("Edge list:", edges)
-
-    alice_dist, alice_parent = bfs_with_parity(graph, alice_start)
-    bob_dist, bob_parent = bfs_with_parity(graph, bob_start)
-
-    print("Alice distances:", alice_dist)
-    print("Bob distances:", bob_dist)
-    
-    meeting_node, meeting_dist, parity = find_meeting_node(
-    num_nodes, alice_dist, bob_dist
-    )
-
-    simple_path = bfs_path(graph, alice_start, bob_start)
-    print("Simple path:", simple_path)
-
-    if meeting_node != -1:
-        print("Meeting possible at node", meeting_node, "in", meeting_dist, "steps")
-        alice_path = reconstruct_path(alice_parent, meeting_node, parity)
-        bob_path = reconstruct_path(bob_parent, meeting_node, parity)
-
-        print_meeting(alice_path, bob_path, meeting_node)
-
-    else:
+    if directed:
         print("Could not establish a rendezvous by adding edges.")
+        return
+
+    edges_to_add = fix_undirected_graph(graph, alice_start, bob_start)
+
+    if not edges_to_add:
+        print("Could not establish a rendezvous by adding edges.")
+        return
+
+    if len(edges_to_add) == 1:
+        print("Adding 1 edge.")
+    else:
+        print(f"Adding {len(edges_to_add)} edges.")
+
+    for u, v in edges_to_add:
+        print(f"Adding {u} {v}.")
+        add_edge(graph, u, v, directed)
+
+    if not solve_current_graph(graph, num_nodes, alice_start, bob_start):
+        print("Could not establish a rendezvous by adding edges.")
+
 
 if __name__ == "__main__":
     main()
