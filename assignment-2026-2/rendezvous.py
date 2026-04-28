@@ -193,7 +193,7 @@ def main():
         print_meeting(alice_path, bob_path, meeting_node)
 
     else:
-        print("No meeting is possible.")
+        print("Could not establish a rendezvous by adding edges.")
 
 if __name__ == "__main__":
     main()
