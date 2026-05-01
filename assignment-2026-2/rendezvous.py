@@ -72,9 +72,11 @@ def find_meeting_node(num_nodes, alice_dist, bob_dist):
                     best_node = node
                     best_dist = da
                     best_parity = parity
+                elif da == best_dist and node > best_node:
+                    best_node = node
+                    best_parity = parity
 
     return best_node, best_dist, best_parity
-
 
 def reconstruct_path(parent, node, parity):
     path = []
