@@ -228,6 +228,45 @@ def directed_base_nodes(graph, num_nodes, alice_start, bob_start):
     candidates.sort()
     return [node for _, node in candidates]
 
+def get_meeting_solution_by_states(graph, alice_start, bob_start):
+    start_state = (alice_start, bob_start)
+
+    q = deque()
+    q.append(start_state)
+
+    visited = set()
+    visited.add(start_state)
+
+    parent = {start_state: None}
+
+    while q:
+        alice, bob = q.popleft()
+
+        if alice == bob:
+            states = []
+            current = (alice, bob)
+
+            while current is not None:
+                states.append(current)
+                current = parent[current]
+
+            states.reverse()
+
+            alice_path = [state[0] for state in states]
+            bob_path = [state[1] for state in states]
+
+            return alice, alice_path, bob_path
+
+        for next_alice in graph[alice]:
+            for next_bob in graph[bob]:
+                next_state = (next_alice, next_bob)
+
+                if next_state not in visited:
+                    visited.add(next_state)
+                    parent[next_state] = (alice, bob)
+                    q.append(next_state)
+
+    return None
 
 def fix_directed_graph_one_edge(graph, num_nodes, alice_start, bob_start):
     base_nodes = directed_base_nodes(graph, num_nodes, alice_start, bob_start)
@@ -242,8 +281,8 @@ def fix_directed_graph_one_edge(graph, num_nodes, alice_start, bob_start):
                 new_graph = [neighbors[:] for neighbors in graph]
                 add_edge(new_graph, u, w, True)
 
-                solution = get_meeting_solution(
-                    new_graph, num_nodes, alice_start, bob_start
+                solution = get_meeting_solution_by_states(
+                    new_graph, alice_start, bob_start
                 )
 
                 if solution is not None:
