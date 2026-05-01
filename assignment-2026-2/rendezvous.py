@@ -1,26 +1,19 @@
 import sys
 from collections import deque
 
-
 def read_graph(graph_file):
     with open(graph_file, "r") as f:
         lines = f.readlines()
-
     num_nodes, num_edges = map(int, lines[0].split())
-
     edges = []
     for line in lines[1:1 + num_edges]:
         u, v = map(int, line.split())
         edges.append((u, v))
-
     alice_start, bob_start = map(int, lines[1 + num_edges].split())
-
     return num_nodes, num_edges, edges, alice_start, bob_start
-
 
 def build_graph(num_nodes, edges, directed):
     graph = [[] for _ in range(num_nodes)]
-
     for u, v in edges:
         graph[u].append(v)
         if not directed:
@@ -31,18 +24,15 @@ def build_graph(num_nodes, edges, directed):
 
     return graph
 
-
 def add_edge(graph, u, v, directed):
     if v not in graph[u]:
         graph[u].append(v)
         graph[u].sort()
-
     if not directed:
         if u not in graph[v]:
             graph[v].append(u)
             graph[v].sort()
-
-
+            
 def bfs_with_parity(graph, start):
     n = len(graph)
     dist = [[-1, -1] for _ in range(n)]
@@ -346,7 +336,7 @@ def fix_directed_graph_one_edge(graph, num_nodes, alice_start, bob_start):
         two_edges = directed_two_cycle_edges(graph, num_nodes, u)
         three_edges = directed_three_cycle_edges(graph, num_nodes, u)
 
-        # Πρώτα δοκιμάζουμε έναν 2-cycle
+        
         for edge in two_edges:
             solution = test_directed_edges(
                 graph, num_nodes, alice_start, bob_start, [edge]
@@ -355,7 +345,7 @@ def fix_directed_graph_one_edge(graph, num_nodes, alice_start, bob_start):
             if solution is not None:
                 return [edge], solution
 
-        # Μετά δοκιμάζουμε έναν 3-cycle
+        
         for edge in three_edges:
             solution = test_directed_edges(
                 graph, num_nodes, alice_start, bob_start, [edge]
@@ -364,7 +354,6 @@ def fix_directed_graph_one_edge(graph, num_nodes, alice_start, bob_start):
             if solution is not None:
                 return [edge], solution
 
-        # Τέλος δοκιμάζουμε συνδυασμό 2-cycle + 3-cycle
         for edge1 in two_edges:
             for edge2 in three_edges:
                 if edge1 == edge2:
