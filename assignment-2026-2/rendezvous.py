@@ -268,40 +268,86 @@ def get_meeting_solution_by_states(graph, alice_start, bob_start):
 
     return None
 
+def directed_two_cycle_edges(graph, num_nodes, u):
+    edges = []
+
+    for w in range(num_nodes):
+        if u in graph[w] and w not in graph[u]:
+            edges.append((u, w))
+
+    return edges
+
+
+def directed_three_cycle_edges(graph, num_nodes, u):
+    edges = []
+
+    for w in range(num_nodes):
+        if w == u:
+            continue
+
+        if w in graph[u]:
+            continue
+
+        for v in graph[w]:
+            if u in graph[v]:
+                edges.append((u, w))
+                break
+
+    return edges
+
+
+def test_directed_edges(graph, num_nodes, alice_start, bob_start, edges_to_add):
+    new_graph = [neighbors[:] for neighbors in graph]
+
+    for u, v in edges_to_add:
+        add_edge(new_graph, u, v, True)
+
+    solution = get_meeting_solution_by_states(
+        new_graph, alice_start, bob_start
+    )
+
+    return solution
+
+
 def fix_directed_graph_one_edge(graph, num_nodes, alice_start, bob_start):
     base_nodes = directed_base_nodes(graph, num_nodes, alice_start, bob_start)
 
-    best_edge = None
-    best_solution = None
-    best_time = float("inf")
-
     for u in base_nodes:
-        for w in range(num_nodes):
-            if u in graph[w] and w not in graph[u]:
-                new_graph = [neighbors[:] for neighbors in graph]
-                add_edge(new_graph, u, w, True)
+        two_edges = directed_two_cycle_edges(graph, num_nodes, u)
+        three_edges = directed_three_cycle_edges(graph, num_nodes, u)
 
-                solution = get_meeting_solution_by_states(
-                    new_graph, alice_start, bob_start
+        # Πρώτα δοκιμάζουμε έναν 2-cycle
+        for edge in two_edges:
+            solution = test_directed_edges(
+                graph, num_nodes, alice_start, bob_start, [edge]
+            )
+
+            if solution is not None:
+                return [edge], solution
+
+        # Μετά δοκιμάζουμε έναν 3-cycle
+        for edge in three_edges:
+            solution = test_directed_edges(
+                graph, num_nodes, alice_start, bob_start, [edge]
+            )
+
+            if solution is not None:
+                return [edge], solution
+
+        # Τέλος δοκιμάζουμε συνδυασμό 2-cycle + 3-cycle
+        for edge1 in two_edges:
+            for edge2 in three_edges:
+                if edge1 == edge2:
+                    continue
+
+                solution = test_directed_edges(
+                    graph, num_nodes, alice_start, bob_start, [edge1, edge2]
                 )
 
                 if solution is not None:
-                    meeting_node, alice_path, bob_path = solution
-                    time_step = len(alice_path) - 1
+                    return [edge1, edge2], solution
 
-                    if time_step < best_time:
-                        best_time = time_step
-                        best_edge = (u, w)
-                        best_solution = solution
-
-        if best_edge is not None:
-            break
-
-    if best_edge is None:
-        return [], None
-
-    return [best_edge], best_solution
-
+    return [], None
 
 def print_added_edges(edges_to_add):
     if len(edges_to_add) == 1:
