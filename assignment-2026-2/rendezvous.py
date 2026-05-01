@@ -183,6 +183,10 @@ def fix_undirected_graph(graph, alice_start, bob_start):
         a = path[0]
         b = path[1]
 
+        for neighbor in graph[a]:
+            if neighbor != b:
+                return [(b, neighbor)]
+
         for neighbor in graph[b]:
             if neighbor != a:
                 return [(a, neighbor)]
