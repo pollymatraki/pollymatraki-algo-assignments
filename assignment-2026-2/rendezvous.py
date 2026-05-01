@@ -173,23 +173,49 @@ def bfs_path(graph, start, target):
     return path
 
 
-def fix_undirected_graph(graph, alice_start, bob_start):
+def fix_undirected_graph(graph, num_nodes, alice_start, bob_start):
     path = bfs_path(graph, alice_start, bob_start)
 
     if not path:
         return []
 
     if len(path) == 2:
-        a = path[0]
-        b = path[1]
+        candidates = []
 
-        for neighbor in graph[a]:
-            if neighbor != b:
-                return [(b, neighbor)]
+        for neighbor in graph[alice_start]:
+            if neighbor != bob_start:
+                candidates.append((bob_start, neighbor))
 
-        for neighbor in graph[b]:
-            if neighbor != a:
-                return [(a, neighbor)]
+        for neighbor in graph[bob_start]:
+            if neighbor != alice_start:
+                candidates.append((alice_start, neighbor))
+
+        best_edge = None
+        best_meeting_node = float("inf")
+        best_time = float("inf")
+
+        for u, v in candidates:
+            new_graph = [neighbors[:] for neighbors in graph]
+            add_edge(new_graph, u, v, False)
+
+            solution = get_meeting_solution(
+                new_graph, num_nodes, alice_start, bob_start
+            )
+
+            if solution is not None:
+                meeting_node, alice_path, bob_path = solution
+                time_step = len(alice_path) - 1
+
+                if time_step < best_time:
+                    best_time = time_step
+                    best_meeting_node = meeting_node
+                    best_edge = (u, v)
+                elif time_step == best_time and meeting_node < best_meeting_node:
+                    best_meeting_node = meeting_node
+                    best_edge = (u, v)
+
+        if best_edge is not None:
+            return [best_edge]
 
         return []
 
@@ -399,7 +425,7 @@ def main():
         print_meeting(alice_path, bob_path, meeting_node)
         return
 
-    edges_to_add = fix_undirected_graph(graph, alice_start, bob_start)
+    edges_to_add = fix_undirected_graph(graph, num_nodes, alice_start, bob_start)
 
     if not edges_to_add:
         print("Could not establish a rendezvous by adding edges.")
