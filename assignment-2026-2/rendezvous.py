@@ -32,6 +32,17 @@ def build_graph(num_nodes, edges, directed):
     return graph
 
 
+def add_edge(graph, u, v, directed):
+    if v not in graph[u]:
+        graph[u].append(v)
+        graph[u].sort()
+
+    if not directed:
+        if u not in graph[v]:
+            graph[v].append(u)
+            graph[v].sort()
+
+
 def bfs_with_parity(graph, start):
     n = len(graph)
     dist = [[-1, -1] for _ in range(n)]
@@ -162,17 +173,6 @@ def bfs_path(graph, start, target):
     return path
 
 
-def add_edge(graph, u, v, directed):
-    if v not in graph[u]:
-        graph[u].append(v)
-        graph[u].sort()
-
-    if not directed:
-        if u not in graph[v]:
-            graph[v].append(u)
-            graph[v].sort()
-
-
 def fix_undirected_graph(graph, alice_start, bob_start):
     path = bfs_path(graph, alice_start, bob_start)
 
@@ -215,52 +215,48 @@ def simple_distances(graph, start):
     return dist
 
 
-def find_directed_base_node(graph, num_nodes, alice_start, bob_start):
+def directed_base_nodes(graph, num_nodes, alice_start, bob_start):
     alice_dist = simple_distances(graph, alice_start)
     bob_dist = simple_distances(graph, bob_start)
 
-    best_node = -1
-    best_sum = float("inf")
+    candidates = []
 
     for node in range(num_nodes):
         if alice_dist[node] != -1 and bob_dist[node] != -1:
-            total = alice_dist[node] + bob_dist[node]
+            candidates.append((alice_dist[node] + bob_dist[node], node))
 
-            if total < best_sum:
-                best_sum = total
-                best_node = node
-
-    return best_node
+    candidates.sort()
+    return [node for _, node in candidates]
 
 
 def fix_directed_graph_one_edge(graph, num_nodes, alice_start, bob_start):
-    u = find_directed_base_node(graph, num_nodes, alice_start, bob_start)
-
-    if u == -1:
-        return [], None
+    base_nodes = directed_base_nodes(graph, num_nodes, alice_start, bob_start)
 
     best_edge = None
     best_solution = None
     best_time = float("inf")
 
-    # 2-cycle candidates: add u -> w where w -> u already exists
-    for w in range(num_nodes):
-        if u in graph[w] and w not in graph[u]:
-            new_graph = [neighbors[:] for neighbors in graph]
-            add_edge(new_graph, u, w, True)
+    for u in base_nodes:
+        for w in range(num_nodes):
+            if u in graph[w] and w not in graph[u]:
+                new_graph = [neighbors[:] for neighbors in graph]
+                add_edge(new_graph, u, w, True)
 
-            solution = get_meeting_solution(
-                new_graph, num_nodes, alice_start, bob_start
-            )
+                solution = get_meeting_solution(
+                    new_graph, num_nodes, alice_start, bob_start
+                )
 
-            if solution is not None:
-                meeting_node, alice_path, bob_path = solution
-                time_step = len(alice_path) - 1
+                if solution is not None:
+                    meeting_node, alice_path, bob_path = solution
+                    time_step = len(alice_path) - 1
 
-                if time_step < best_time:
-                    best_time = time_step
-                    best_edge = (u, w)
-                    best_solution = solution
+                    if time_step < best_time:
+                        best_time = time_step
+                        best_edge = (u, w)
+                        best_solution = solution
+
+        if best_edge is not None:
+            break
 
     if best_edge is None:
         return [], None
