@@ -78,6 +78,7 @@ def find_meeting_node(num_nodes, alice_dist, bob_dist):
 
     return best_node, best_dist, best_parity
 
+
 def reconstruct_path(parent, node, parity):
     path = []
     current_node = node
@@ -96,6 +97,34 @@ def print_meeting(alice_path, bob_path, meeting_node):
         print(f"{i}: Alice at {alice_path[i]}, Bob at {bob_path[i]}")
 
     print(f"Meeting at node {meeting_node} at time step {len(alice_path) - 1}.")
+
+
+def get_meeting_solution(graph, num_nodes, alice_start, bob_start):
+    alice_dist, alice_parent = bfs_with_parity(graph, alice_start)
+    bob_dist, bob_parent = bfs_with_parity(graph, bob_start)
+
+    meeting_node, meeting_dist, parity = find_meeting_node(
+        num_nodes, alice_dist, bob_dist
+    )
+
+    if meeting_node == -1:
+        return None
+
+    alice_path = reconstruct_path(alice_parent, meeting_node, parity)
+    bob_path = reconstruct_path(bob_parent, meeting_node, parity)
+
+    return meeting_node, alice_path, bob_path
+
+
+def solve_current_graph(graph, num_nodes, alice_start, bob_start):
+    solution = get_meeting_solution(graph, num_nodes, alice_start, bob_start)
+
+    if solution is None:
+        return False
+
+    meeting_node, alice_path, bob_path = solution
+    print_meeting(alice_path, bob_path, meeting_node)
+    return True
 
 
 def bfs_path(graph, start, target):
@@ -167,22 +196,49 @@ def fix_undirected_graph(graph, alice_start, bob_start):
     return [(previous_node, meeting_node)]
 
 
-def solve_current_graph(graph, num_nodes, alice_start, bob_start):
-    alice_dist, alice_parent = bfs_with_parity(graph, alice_start)
-    bob_dist, bob_parent = bfs_with_parity(graph, bob_start)
+def fix_directed_graph_one_edge(graph, num_nodes, alice_start, bob_start):
+    best_edge = None
+    best_solution = None
+    best_time = float("inf")
 
-    meeting_node, meeting_dist, parity = find_meeting_node(
-        num_nodes, alice_dist, bob_dist
-    )
+    for u in range(num_nodes):
+        for v in range(num_nodes):
+            if u == v:
+                continue
 
-    if meeting_node == -1:
-        return False
+            if v in graph[u]:
+                continue
 
-    alice_path = reconstruct_path(alice_parent, meeting_node, parity)
-    bob_path = reconstruct_path(bob_parent, meeting_node, parity)
+            new_graph = [neighbors[:] for neighbors in graph]
+            add_edge(new_graph, u, v, True)
 
-    print_meeting(alice_path, bob_path, meeting_node)
-    return True
+            solution = get_meeting_solution(
+                new_graph, num_nodes, alice_start, bob_start
+            )
+
+            if solution is not None:
+                meeting_node, alice_path, bob_path = solution
+                time_step = len(alice_path) - 1
+
+                if time_step < best_time:
+                    best_time = time_step
+                    best_edge = (u, v)
+                    best_solution = solution
+
+    if best_edge is None:
+        return [], None
+
+    return [best_edge], best_solution
+
+
+def print_added_edges(edges_to_add):
+    if len(edges_to_add) == 1:
+        print("Adding 1 edge.")
+    else:
+        print(f"Adding {len(edges_to_add)} edges.")
+
+    for u, v in edges_to_add:
+        print(f"Adding {u} {v}.")
 
 
 def main():
@@ -207,7 +263,18 @@ def main():
     print("No meeting is possible.")
 
     if directed:
-        print("Could not establish a rendezvous by adding edges.")
+        edges_to_add, solution = fix_directed_graph_one_edge(
+            graph, num_nodes, alice_start, bob_start
+        )
+
+        if not edges_to_add:
+            print("Could not establish a rendezvous by adding edges.")
+            return
+
+        print_added_edges(edges_to_add)
+
+        meeting_node, alice_path, bob_path = solution
+        print_meeting(alice_path, bob_path, meeting_node)
         return
 
     edges_to_add = fix_undirected_graph(graph, alice_start, bob_start)
@@ -216,13 +283,9 @@ def main():
         print("Could not establish a rendezvous by adding edges.")
         return
 
-    if len(edges_to_add) == 1:
-        print("Adding 1 edge.")
-    else:
-        print(f"Adding {len(edges_to_add)} edges.")
+    print_added_edges(edges_to_add)
 
     for u, v in edges_to_add:
-        print(f"Adding {u} {v}.")
         add_edge(graph, u, v, directed)
 
     if not solve_current_graph(graph, num_nodes, alice_start, bob_start):
