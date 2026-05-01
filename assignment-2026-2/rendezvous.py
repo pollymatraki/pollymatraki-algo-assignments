@@ -196,21 +196,58 @@ def fix_undirected_graph(graph, alice_start, bob_start):
     return [(previous_node, meeting_node)]
 
 
+def simple_distances(graph, start):
+    n = len(graph)
+    dist = [-1] * n
+
+    q = deque()
+    q.append(start)
+    dist[start] = 0
+
+    while q:
+        node = q.popleft()
+
+        for neighbor in graph[node]:
+            if dist[neighbor] == -1:
+                dist[neighbor] = dist[node] + 1
+                q.append(neighbor)
+
+    return dist
+
+
+def find_directed_base_node(graph, num_nodes, alice_start, bob_start):
+    alice_dist = simple_distances(graph, alice_start)
+    bob_dist = simple_distances(graph, bob_start)
+
+    best_node = -1
+    best_sum = float("inf")
+
+    for node in range(num_nodes):
+        if alice_dist[node] != -1 and bob_dist[node] != -1:
+            total = alice_dist[node] + bob_dist[node]
+
+            if total < best_sum:
+                best_sum = total
+                best_node = node
+
+    return best_node
+
+
 def fix_directed_graph_one_edge(graph, num_nodes, alice_start, bob_start):
+    u = find_directed_base_node(graph, num_nodes, alice_start, bob_start)
+
+    if u == -1:
+        return [], None
+
     best_edge = None
     best_solution = None
     best_time = float("inf")
 
-    for u in range(num_nodes):
-        for v in range(num_nodes):
-            if u == v:
-                continue
-
-            if v in graph[u]:
-                continue
-
+    # 2-cycle candidates: add u -> w where w -> u already exists
+    for w in range(num_nodes):
+        if u in graph[w] and w not in graph[u]:
             new_graph = [neighbors[:] for neighbors in graph]
-            add_edge(new_graph, u, v, True)
+            add_edge(new_graph, u, w, True)
 
             solution = get_meeting_solution(
                 new_graph, num_nodes, alice_start, bob_start
@@ -222,7 +259,7 @@ def fix_directed_graph_one_edge(graph, num_nodes, alice_start, bob_start):
 
                 if time_step < best_time:
                     best_time = time_step
-                    best_edge = (u, v)
+                    best_edge = (u, w)
                     best_solution = solution
 
     if best_edge is None:
