@@ -56,6 +56,53 @@ def create_slots(left, right, result):
 
     return slots
 
+def get_stick_labels(slot_label, digit):
+    labels = []
+
+    for segment in sorted(SEGMENTS[digit]):
+        labels.append(slot_label + str(segment))
+
+    return labels
+
+
+def get_digit_change(source_digit, target_digit):
+    source_segments = SEGMENTS[source_digit]
+    target_segments = SEGMENTS[target_digit]
+
+    added_segments = target_segments - source_segments
+    removed_segments = source_segments - target_segments
+
+    return added_segments, removed_segments
+
+
+def get_candidates_for_slot(slot, max_k):
+    source_digit = slot["digit"]
+    slot_label = slot["label"]
+
+    candidates = []
+
+    for target_digit in range(10):
+        added_segments, removed_segments = get_digit_change(source_digit, target_digit)
+
+        if len(added_segments) <= max_k and len(removed_segments) <= max_k:
+            added_labels = []
+            removed_labels = []
+
+            for segment in sorted(added_segments):
+                added_labels.append(slot_label + str(segment))
+
+            for segment in sorted(removed_segments):
+                removed_labels.append(slot_label + str(segment))
+
+            candidates.append({
+                "target_digit": target_digit,
+                "added": added_labels,
+                "removed": removed_labels,
+                "delta": len(added_labels) - len(removed_labels)
+            })
+
+    return candidates
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -72,6 +119,26 @@ def main():
 
     for slot in slots:
         print(slot["label"], "=", slot["digit"])
+
+print()
+print("CANDIDATES:")
+
+for slot in slots:
+    print("Slot", slot["label"], "digit", slot["digit"])
+
+    candidates = get_candidates_for_slot(slot, args.max_k)
+
+    for candidate in candidates:
+        print(
+            "  ->",
+            candidate["target_digit"],
+            "added:",
+            candidate["added"],
+            "removed:",
+            candidate["removed"],
+            "delta:",
+            candidate["delta"]
+        )
 
 
 if __name__ == "__main__":
