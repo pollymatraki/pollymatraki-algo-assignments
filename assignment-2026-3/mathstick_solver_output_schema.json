@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/louridas/rwa/mathstick/mathstick_solver_output.schema.json",
+  "title": "MathSticks solver output",
+  "description": "JSON document emitted to stdout by `mathstick.py --problem ...`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "problem",
+    "max_k",
+    "counts",
+    "nodes_visited",
+    "nodes_pruned",
+    "solutions"
+  ],
+  "properties": {
+    "problem": {
+      "type": "string",
+      "description": "The input puzzle as a string: `a op b = c` where a, b, c are positive-digit integers and op is '+' or '-'. Whitespace around the tokens is optional.",
+      "pattern": "^\\s*\\d+\\s*[+\\-]\\s*\\d+\\s*=\\s*\\d+\\s*$"
+    },
+    "max_k": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Maximum stick-move budget the solver was invoked with (defaults to 2 in the CLI; any positive integer is accepted)."
+    },
+    "counts": {
+      "type": "object",
+      "description": "Solution counts keyed by stringified move-count k. Keys are the string forms of integers 1..max_k; values are the lengths of the corresponding arrays in `solutions`.",
+      "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "nodes_visited": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total DFS nodes visited across both target-operator passes of the forward solver on this problem. Cumulative; sums every recursive entry, including leaves."
+    },
+    "nodes_pruned": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total DFS branches rejected during this problem's search. A branch is rejected by either the running stick-budget cap or the suffix-feasibility check; both reasons are counted into the same total."
+    },
+    "solutions": {
+      "type": "object",
+      "description": "Solutions grouped by stringified move-count k. Keys cover 1..max_k; each value is an array of solution objects whose length matches `counts[k]`.",
+      "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+      "additionalProperties": {
+        "type": "array",
+        "items": { "$ref": "#/$defs/solution" }
+      }
+    }
+  },
+
+  "$defs": {
+    "solution": {
+      "type": "object",
+      "description": "A single solution to the puzzle: a target equation reachable from `problem` by exactly k stick relocations, where k is the key under which this object appears in `solutions`.",
+      "additionalProperties": false,
+      "required": [
+        "equation",
+        "picks",
+        "places",
+        "moves",
+        "nodes_visited",
+        "nodes_pruned"
+      ],
+      "properties": {
+        "equation": {
+          "type": "string",
+          "description": "The target (valid) equation, space-separated, in the form `a op b = c` with op ∈ {+, -}.",
+          "pattern": "^\\d+ [+\\-] \\d+ = \\d+$"
+        },
+        "picks": {
+          "type": "array",
+          "description": "Sorted list of stick labels removed from the problem state to reach the target. Length equals the move count k.",
+          "items": { "$ref": "#/$defs/stick_label" },
+          "uniqueItems": true
+        },
+        "places": {
+          "type": "array",
+          "description": "Sorted list of stick labels added to the problem state to reach the target. Length equals the move count k and always matches `picks` in length (conservation).",
+          "items": { "$ref": "#/$defs/stick_label" },
+          "uniqueItems": true
+        },
+        "moves": {
+          "type": "array",
+          "description": "Explicit move list, k entries, each of the form `Move(<src>, <dst>)`. The pairing of picks→places is a deterministic sort-and-zip and the intermediate state between move 1 and move 2 is not guaranteed to render valid digits in every slot.",
+          "items": {
+            "type": "string",
+            "pattern": "^Move\\(([A-Z][0-6]|G0), ([A-Z][0-6]|G0)\\)$"
+          }
+        },
+        "nodes_visited": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Cumulative `nodes_visited` counter at the moment the DFS reached this solution's leaf. Monotonically increasing in discovery order across the two target-operator passes; bounded above by the top-level `nodes_visited`."
+        },
+        "nodes_pruned": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Cumulative `nodes_pruned` counter at the moment the DFS reached this solution's leaf. Same conventions as the per-solution `nodes_visited`."
+        }
+      }
+    },
+
+    "stick_label": {
+      "type": "string",
+      "description": "A position label for one matchstick. Either `<slot-letter><segment-index>` where the slot letter is a single uppercase letter assigned A, B, C, ... left-to-right across the equation's digit slots and the segment index is 0..6 (0 = middle, 1 = top, 2 = top-right, 3 = bottom-right, 4 = bottom, 5 = bottom-left, 6 = top-left); or the literal `G0`, the operator's editable vertical stroke (present only when the operator is `+`).",
+      "pattern": "^([A-Z][0-6]|G0)$"
+    }
+  }
+}
