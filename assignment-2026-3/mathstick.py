@@ -1,5 +1,4 @@
 import argparse
-import json
 import re
 
 
@@ -18,8 +17,7 @@ SEGMENTS = {
 
 
 def parse_problem(problem):
-    pattern = r'^\s*(\d+)\s*([+\-])\s*(\d+)\s*=\s*(\d+)\s*$'
-
+    pattern = r"^\s*(\d+)\s*([+\-])\s*(\d+)\s*=\s*(\d+)\s*$"
     match = re.match(pattern, problem)
 
     if not match:
@@ -49,12 +47,14 @@ def create_slots(left, right, result):
 
     for i in range(len(digits)):
         label = chr(ord("A") + i)
+
         slots.append({
             "label": label,
             "digit": digits[i]
         })
 
     return slots
+
 
 def get_stick_labels(slot_label, digit):
     labels = []
@@ -103,6 +103,36 @@ def get_candidates_for_slot(slot, max_k):
 
     return candidates
 
+
+def print_slots(slots):
+    print("SLOTS:")
+
+    for slot in slots:
+        print(slot["label"], "=", slot["digit"])
+
+
+def print_candidates(slots, max_k):
+    print()
+    print("CANDIDATES:")
+
+    for slot in slots:
+        print("Slot", slot["label"], "digit", slot["digit"])
+
+        candidates = get_candidates_for_slot(slot, max_k)
+
+        for candidate in candidates:
+            print(
+                "  ->",
+                candidate["target_digit"],
+                "added:",
+                candidate["added"],
+                "removed:",
+                candidate["removed"],
+                "delta:",
+                candidate["delta"]
+            )
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -115,30 +145,8 @@ def main():
 
     slots = create_slots(left, right, result)
 
-    print("SLOTS:")
-
-    for slot in slots:
-        print(slot["label"], "=", slot["digit"])
-
-print()
-print("CANDIDATES:")
-
-for slot in slots:
-    print("Slot", slot["label"], "digit", slot["digit"])
-
-    candidates = get_candidates_for_slot(slot, args.max_k)
-
-    for candidate in candidates:
-        print(
-            "  ->",
-            candidate["target_digit"],
-            "added:",
-            candidate["added"],
-            "removed:",
-            candidate["removed"],
-            "delta:",
-            candidate["delta"]
-        )
+    print_slots(slots)
+    print_candidates(slots, args.max_k)
 
 
 if __name__ == "__main__":
