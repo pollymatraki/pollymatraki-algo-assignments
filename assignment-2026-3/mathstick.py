@@ -181,6 +181,48 @@ def print_digit_transitions(transitions, digit):
             transition["delta"]
         )
 
+def compute_slot_delta_intervals(slots, transitions):
+    intervals = []
+
+    for slot in slots:
+        digit = slot["digit"]
+        digit_transitions = transitions[digit]
+
+        min_delta = digit_transitions[0]["delta"]
+        max_delta = digit_transitions[0]["delta"]
+
+        for transition in digit_transitions:
+            if transition["delta"] < min_delta:
+                min_delta = transition["delta"]
+
+            if transition["delta"] > max_delta:
+                max_delta = transition["delta"]
+
+        intervals.append({
+            "slot": slot["label"],
+            "digit": digit,
+            "min_delta": min_delta,
+            "max_delta": max_delta
+        })
+
+    return intervals
+
+
+def print_slot_delta_intervals(intervals):
+    print()
+    print("SLOT DELTA INTERVALS:")
+
+    for item in intervals:
+        print(
+            item["slot"],
+            "digit",
+            item["digit"],
+            "[",
+            item["min_delta"],
+            ",",
+            item["max_delta"],
+            "]"
+        )
 def main():
     parser = argparse.ArgumentParser()
 
