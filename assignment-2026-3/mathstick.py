@@ -22,7 +22,7 @@ def parse_problem(problem):
 
     if not match:
         raise ValueError("Invalid problem format")
-
+    
     left = match.group(1)
     operator = match.group(2)
     right = match.group(3)
@@ -132,6 +132,54 @@ def print_candidates(slots, max_k):
                 candidate["delta"]
             )
 
+def build_digit_transitions(max_k):
+    transitions = {}
+
+    for source_digit in range(10):
+        transitions[source_digit] = []
+
+        for target_digit in range(10):
+            source_segments = SEGMENTS[source_digit]
+            target_segments = SEGMENTS[target_digit]
+
+            added_segments = target_segments - source_segments
+            removed_segments = source_segments - target_segments
+
+            a = len(added_segments)
+            r = len(removed_segments)
+
+            if a <= max_k and r <= max_k:
+                transitions[source_digit].append({
+                    "target_digit": target_digit,
+                    "added_segments": sorted(added_segments),
+                    "removed_segments": sorted(removed_segments),
+                    "a": a,
+                    "r": r,
+                    "delta": a - r
+                })
+
+    return transitions
+
+
+def print_digit_transitions(transitions, digit):
+    print("TRANSITIONS FOR DIGIT", digit)
+
+    for transition in transitions[digit]:
+        print(
+            digit,
+            "->",
+            transition["target_digit"],
+            "added:",
+            transition["added_segments"],
+            "removed:",
+            transition["removed_segments"],
+            "a:",
+            transition["a"],
+            "r:",
+            transition["r"],
+            "delta:",
+            transition["delta"]
+        )
 
 def main():
     parser = argparse.ArgumentParser()
@@ -147,7 +195,14 @@ def main():
 
     print_slots(slots)
     print_candidates(slots, args.max_k)
+    transitions = build_digit_transitions(args.max_k)
 
+    print()
+    print_digit_transitions(transitions, 0)
+
+    print()
+    print_digit_transitions(transitions, 1)
 
 if __name__ == "__main__":
     main()
+    
