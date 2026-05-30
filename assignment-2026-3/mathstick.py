@@ -257,6 +257,60 @@ def print_suffix_intervals(suffixes):
             "]"
         )
 
+def get_operator_transition(source_operator, target_operator):
+    if source_operator == target_operator:
+        return {
+            "target_operator": target_operator,
+            "added": [],
+            "removed": [],
+            "oa": 0,
+            "or": 0,
+            "od": 0
+        }
+
+    if source_operator == "-" and target_operator == "+":
+        return {
+            "target_operator": target_operator,
+            "added": ["G0"],
+            "removed": [],
+            "oa": 1,
+            "or": 0,
+            "od": -1
+        }
+
+    return {
+        "target_operator": target_operator,
+        "added": [],
+        "removed": ["G0"],
+        "oa": 0,
+        "or": 1,
+        "od": 1
+    }
+
+
+def print_operator_transitions(operator):
+    print()
+    print("OPERATOR TRANSITIONS:")
+
+    for target_operator in ["+", "-"]:
+        transition = get_operator_transition(operator, target_operator)
+
+        print(
+            operator,
+            "->",
+            target_operator,
+            "added:",
+            transition["added"],
+            "removed:",
+            transition["removed"],
+            "oa:",
+            transition["oa"],
+            "or:",
+            transition["or"],
+            "od:",
+            transition["od"]
+        )
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -280,6 +334,8 @@ def main():
 
     suffixes = compute_suffix_intervals(intervals)
     print_suffix_intervals(suffixes)
+
+    print_operator_transitions(operator)
     
     print()
     print_digit_transitions(transitions, 0)
