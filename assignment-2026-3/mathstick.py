@@ -223,6 +223,41 @@ def print_slot_delta_intervals(intervals):
             item["max_delta"],
             "]"
         )
+def compute_suffix_intervals(intervals):
+    suffixes = []
+
+    suffix_min = 0
+    suffix_max = 0
+
+    for i in range(len(intervals) - 1, -1, -1):
+        suffix_min += intervals[i]["min_delta"]
+        suffix_max += intervals[i]["max_delta"]
+
+        suffixes.insert(0, {
+            "index": i,
+            "slot": intervals[i]["slot"],
+            "suffix_min": suffix_min,
+            "suffix_max": suffix_max
+        })
+
+    return suffixes
+
+
+def print_suffix_intervals(suffixes):
+    print()
+    print("SUFFIX INTERVALS:")
+
+    for item in suffixes:
+        print(
+            item["slot"],
+            "[",
+            item["suffix_min"],
+            ",",
+            item["suffix_max"],
+            "]"
+        )
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -239,6 +274,13 @@ def main():
     print_candidates(slots, args.max_k)
     transitions = build_digit_transitions(args.max_k)
 
+    intervals = compute_slot_delta_intervals(slots, transitions)
+    print_slot_delta_intervals(intervals)
+    
+
+    suffixes = compute_suffix_intervals(intervals)
+    print_suffix_intervals(suffixes)
+    
     print()
     print_digit_transitions(transitions, 0)
 
