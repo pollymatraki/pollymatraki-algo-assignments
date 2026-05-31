@@ -393,7 +393,7 @@ def main():
 
     print()
     print_digit_transitions(transitions, 1)
-        output = create_empty_output(args.problem, args.max_k)
+    output = create_empty_output(args.problem, args.max_k)
 
     print()
     print("JSON OUTPUT STRUCTURE")
