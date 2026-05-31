@@ -309,7 +309,9 @@ def print_operator_transitions(operator):
             transition["or"],
             "od:",
             transition["od"]
-        )def create_empty_output(problem, max_k):
+        )
+
+def create_empty_output(problem, max_k):
     output = {
         "problem": problem,
         "max_k": max_k,
@@ -325,6 +327,41 @@ def print_operator_transitions(operator):
 
     return output
 
+def create_search_state():
+    return {
+        "nodes_visited": 0,
+        "nodes_pruned": 0,
+        "solutions": []
+    }
+def do_slot(
+    index,
+    slots,
+    transitions,
+    current_solution,
+    state
+):
+    state["nodes_visited"] += 1
+
+    if index == len(slots):
+        state["solutions"].append(current_solution.copy())
+        return
+
+    current_digit = slots[index]["digit"]
+
+    for transition in transitions[current_digit]:
+        current_solution.append(
+            transition["target_digit"]
+        )
+
+        do_slot(
+            index + 1,
+            slots,
+            transitions,
+            current_solution,
+            state
+        )
+
+        current_solution.pop()
 
 def main():
     parser = argparse.ArgumentParser()
@@ -356,11 +393,27 @@ def main():
 
     print()
     print_digit_transitions(transitions, 1)
-    output = create_empty_output(args.problem, args.max_k)
+        output = create_empty_output(args.problem, args.max_k)
 
     print()
     print("JSON OUTPUT STRUCTURE")
     print(output)
+
+    
+    state = create_search_state()
+
+    do_slot(
+        0,
+        slots,
+        transitions,
+        [],
+        state
+    )
+
+    print()
+    print("DFS TEST")
+    print("Visited:", state["nodes_visited"])
+    print("Solutions:", len(state["solutions"]))
 
 if __name__ == "__main__":
     main()
