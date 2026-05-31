@@ -309,7 +309,21 @@ def print_operator_transitions(operator):
             transition["or"],
             "od:",
             transition["od"]
-        )
+        )def create_empty_output(problem, max_k):
+    output = {
+        "problem": problem,
+        "max_k": max_k,
+        "counts": {},
+        "nodes_visited": 0,
+        "nodes_pruned": 0,
+        "solutions": {}
+    }
+
+    for k in range(1, max_k + 1):
+        output["counts"][str(k)] = 0
+        output["solutions"][str(k)] = []
+
+    return output
 
 
 def main():
@@ -342,6 +356,11 @@ def main():
 
     print()
     print_digit_transitions(transitions, 1)
+    output = create_empty_output(args.problem, args.max_k)
+
+    print()
+    print("JSON OUTPUT STRUCTURE")
+    print(output)
 
 if __name__ == "__main__":
     main()
