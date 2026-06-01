@@ -337,7 +337,12 @@ def do_slot(
     index,
     slots,
     transitions,
+    suffixes,
+    operator_transition,
+    max_k,
     current_solution,
+    total_added,
+    total_removed,
     state
 ):
     state["nodes_visited"] += 1
@@ -349,15 +354,42 @@ def do_slot(
     current_digit = slots[index]["digit"]
 
     for transition in transitions[current_digit]:
-        current_solution.append(
-            transition["target_digit"]
-        )
+        new_total_added = total_added + transition["a"]
+        new_total_removed = total_removed + transition["r"]
+
+        if new_total_added + operator_transition["oa"] > max_k:
+            state["nodes_pruned"] += 1
+            continue
+
+        if new_total_removed + operator_transition["or"] > max_k:
+            state["nodes_pruned"] += 1
+            continue
+
+        n = operator_transition["od"] - (new_total_added - new_total_removed)
+
+        if index + 1 < len(slots):
+            suffix_min = suffixes[index + 1]["suffix_min"]
+            suffix_max = suffixes[index + 1]["suffix_max"]
+        else:
+            suffix_min = 0
+            suffix_max = 0
+
+        if n < suffix_min or n > suffix_max:
+            state["nodes_pruned"] += 1
+            continue
+
+        current_solution.append(transition["target_digit"])
 
         do_slot(
             index + 1,
             slots,
             transitions,
+            suffixes,
+            operator_transition,
+            max_k,
             current_solution,
+            new_total_added,
+            new_total_removed,
             state
         )
 
@@ -402,11 +434,18 @@ def main():
     
     state = create_search_state()
 
+    operator_transition = get_operator_transition(operator, operator)
+
     do_slot(
         0,
         slots,
         transitions,
+        suffixes,
+        operator_transition,
+        args.max_k,
         [],
+        0,
+        0,
         state
     )
 
