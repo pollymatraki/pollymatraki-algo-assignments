@@ -516,7 +516,6 @@ def main():
     print("Pruned:", state["nodes_pruned"])
     for solution in state["solutions"]:
         print(solution)
-
     print()
 
     
