@@ -453,6 +453,7 @@ def main():
     print("DFS TEST")
     print("Visited:", state["nodes_visited"])
     print("Solutions:", len(state["solutions"]))
+    
     print("Pruned:", state["nodes_pruned"])
 if __name__ == "__main__":
     main()
