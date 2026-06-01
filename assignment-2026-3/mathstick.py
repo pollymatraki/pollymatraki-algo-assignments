@@ -355,16 +355,30 @@ def do_slot(
         final_removed = total_removed + operator_transition["or"]
 
         if final_added == final_removed:
+            solution_digits = extract_digits_from_solution(current_solution)
+
             if is_valid_equation(
-                current_solution,
+                solution_digits,
                 left,
                 right,
                 result,
                 operator_transition["target_operator"]
             ):
-                state["solutions"].append(current_solution.copy())
+                picks, places = build_picks_and_places(
+                    current_solution,
+                    operator_transition
+                )
 
-            return
+                moves = build_moves(picks, places)
+
+                state["solutions"].append({
+                    "digits": solution_digits,
+                    "picks": picks,
+                    "places": places,
+                    "moves": moves
+                })
+
+        return
 
     current_digit = slots[index]["digit"]
 
@@ -393,7 +407,12 @@ def do_slot(
             state["nodes_pruned"] += 1
             continue
 
-        current_solution.append(transition["target_digit"])
+        current_solution.append({
+            "digit": transition["target_digit"],
+            "added_segments": transition["added_segments"],
+            "removed_segments": transition["removed_segments"],
+            "slot": slots[index]["label"]
+        })
 
         do_slot(
             index + 1,
@@ -412,7 +431,7 @@ def do_slot(
         )
 
         current_solution.pop()
-
+        
 def digits_to_number(digits):
     value = 0
 
@@ -450,6 +469,48 @@ def is_valid_equation(solution_digits, left, right, result, operator):
         return left_value + right_value == result_value
 
     return left_value - right_value == result_value
+
+def extract_digits_from_solution(current_solution):
+    digits = []
+
+    for item in current_solution:
+        digits.append(item["digit"])
+
+    return digits
+
+
+def build_picks_and_places(solution, operator_transition):
+    picks = []
+    places = []
+
+    for item in solution:
+        slot = item["slot"]
+
+        for segment in item["removed_segments"]:
+            picks.append(slot + str(segment))
+
+        for segment in item["added_segments"]:
+            places.append(slot + str(segment))
+
+    for removed in operator_transition["removed"]:
+        picks.append(removed)
+
+    for added in operator_transition["added"]:
+        places.append(added)
+
+    picks.sort()
+    places.sort()
+
+    return picks, places
+
+
+def build_moves(picks, places):
+    moves = []
+
+    for i in range(len(picks)):
+        moves.append("Move(" + picks[i] + ", " + places[i] + ")")
+
+    return moves
 
 def main():
     parser = argparse.ArgumentParser()
@@ -515,7 +576,7 @@ def main():
 
     print("Pruned:", state["nodes_pruned"])
     for solution in state["solutions"]:
-        print(solution)
+        print(solution["digits"], solution["picks"], solution["places"], solution["moves"])
     print()
 
     
