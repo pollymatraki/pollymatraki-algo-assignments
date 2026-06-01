@@ -514,6 +514,12 @@ def main():
     print("Solutions:", len(state["solutions"]))
 
     print("Pruned:", state["nodes_pruned"])
+    for solution in state["solutions"]:
+        print(solution)
+
+    print()
+
+    
 if __name__ == "__main__":
     main()
     
