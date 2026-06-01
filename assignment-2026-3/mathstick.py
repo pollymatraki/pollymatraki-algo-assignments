@@ -343,13 +343,28 @@ def do_slot(
     current_solution,
     total_added,
     total_removed,
-    state
+    state,
+    left,
+    right,
+    result
 ):
     state["nodes_visited"] += 1
 
     if index == len(slots):
-        state["solutions"].append(current_solution.copy())
-        return
+        final_added = total_added + operator_transition["oa"]
+        final_removed = total_removed + operator_transition["or"]
+
+        if final_added == final_removed:
+            if is_valid_equation(
+                current_solution,
+                left,
+                right,
+                result,
+                operator_transition["target_operator"]
+            ):
+                state["solutions"].append(current_solution.copy())
+
+            return
 
     current_digit = slots[index]["digit"]
 
@@ -390,10 +405,51 @@ def do_slot(
             current_solution,
             new_total_added,
             new_total_removed,
-            state
+            state,
+            left,
+            right,
+            result
         )
 
         current_solution.pop()
+
+def digits_to_number(digits):
+    value = 0
+
+    for digit in digits:
+        value = value * 10 + digit
+
+    return value
+
+
+def split_solution_digits(solution_digits, left, right, result):
+    left_len = len(left)
+    right_len = len(right)
+    result_len = len(result)
+
+    left_digits = solution_digits[0:left_len]
+    right_digits = solution_digits[left_len:left_len + right_len]
+    result_digits = solution_digits[left_len + right_len:left_len + right_len + result_len]
+
+    return left_digits, right_digits, result_digits
+
+
+def is_valid_equation(solution_digits, left, right, result, operator):
+    left_digits, right_digits, result_digits = split_solution_digits(
+        solution_digits,
+        left,
+        right,
+        result
+    )
+
+    left_value = digits_to_number(left_digits)
+    right_value = digits_to_number(right_digits)
+    result_value = digits_to_number(result_digits)
+
+    if operator == "+":
+        return left_value + right_value == result_value
+
+    return left_value - right_value == result_value
 
 def main():
     parser = argparse.ArgumentParser()
@@ -446,14 +502,17 @@ def main():
         [],
         0,
         0,
-        state
+        state,
+        left,
+        right,
+        result
     )
 
     print()
     print("DFS TEST")
     print("Visited:", state["nodes_visited"])
     print("Solutions:", len(state["solutions"]))
-    
+
     print("Pruned:", state["nodes_pruned"])
 if __name__ == "__main__":
     main()
