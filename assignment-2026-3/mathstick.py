@@ -533,7 +533,7 @@ def solution_move_count(solution):
     return len(solution["picks"])
 
 
-def build_json_output(problem, max_k, state, left, right, result, operator):
+def build_json_output(problem, max_k, state, left, right, result):
     output = create_empty_output(problem, max_k)
 
     output["nodes_visited"] = state["nodes_visited"]
@@ -553,13 +553,13 @@ def build_json_output(problem, max_k, state, left, right, result, operator):
                 left,
                 right,
                 result,
-                operator
+                solution["operator"]
             ),
             "picks": solution["picks"],
             "places": solution["places"],
             "moves": solution["moves"],
-            "nodes_visited": state["nodes_visited"],
-            "nodes_pruned": state["nodes_pruned"]
+            "nodes_visited": solution["nodes_visited"],
+            "nodes_pruned": solution["nodes_pruned"]
         }
 
         output["solutions"][key].append(solution_object)
@@ -578,74 +578,62 @@ def main():
     left, operator, right, result = parse_problem(args.problem)
 
     slots = create_slots(left, right, result)
-
-    print_slots(slots)
-    print_candidates(slots, args.max_k)
     transitions = build_digit_transitions(args.max_k)
 
     intervals = compute_slot_delta_intervals(slots, transitions)
-    print_slot_delta_intervals(intervals)
-    
-
     suffixes = compute_suffix_intervals(intervals)
-    print_suffix_intervals(suffixes)
 
-    print_operator_transitions(operator)
-    
-    print()
-    print_digit_transitions(transitions, 0)
+    all_solutions = []
+    total_visited = 0
+    total_pruned = 0
 
-    print()
-    print_digit_transitions(transitions, 1)
-    output = create_empty_output(args.problem, args.max_k)
+    for target_operator in ["+", "-"]:
+        operator_transition = get_operator_transition(
+            operator,
+            target_operator
+        )
 
-    print()
-    print("JSON OUTPUT STRUCTURE")
-    print(output)
+        state = create_search_state()
 
-    
-    state = create_search_state()
+        do_slot(
+            0,
+            slots,
+            transitions,
+            suffixes,
+            operator_transition,
+            args.max_k,
+            [],
+            0,
+            0,
+            state,
+            left,
+            right,
+            result
+        )
 
-    operator_transition = get_operator_transition(operator, operator)
+        total_visited += state["nodes_visited"]
+        total_pruned += state["nodes_pruned"]
 
-    do_slot(
-        0,
-        slots,
-        transitions,
-        suffixes,
-        operator_transition,
+        for solution in state["solutions"]:
+            solution["operator"] = target_operator
+            solution["nodes_visited"] = state["nodes_visited"]
+            solution["nodes_pruned"] = state["nodes_pruned"]
+            all_solutions.append(solution)
+
+    final_state = create_search_state()
+    final_state["solutions"] = all_solutions
+    final_state["nodes_visited"] = total_visited
+    final_state["nodes_pruned"] = total_pruned
+
+    final_output = build_json_output(
+        args.problem,
         args.max_k,
-        [],
-        0,
-        0,
-        state,
+        final_state,
         left,
         right,
         result
     )
 
-    print()
-    print("DFS TEST")
-    print("Visited:", state["nodes_visited"])
-    print("Solutions:", len(state["solutions"]))
-
-    print("Pruned:", state["nodes_pruned"])
-    for solution in state["solutions"]:
-        print(solution["digits"], solution["picks"], solution["places"], solution["moves"])
-    print()
-
-    final_output = build_json_output(
-    args.problem,
-    args.max_k,
-    state,
-    left,
-    right,
-    result,
-    operator_transition["target_operator"]
-)
-
-    print()
-    print("FINAL JSON OUTPUT")
     print(json.dumps(final_output, indent=2, ensure_ascii=False))
 
     
