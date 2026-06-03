@@ -1,5 +1,6 @@
 import argparse
 import re
+import json
 
 
 SEGMENTS = {
@@ -431,7 +432,7 @@ def do_slot(
         )
 
         current_solution.pop()
-        
+
 def digits_to_number(digits):
     value = 0
 
