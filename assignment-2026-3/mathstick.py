@@ -513,6 +513,60 @@ def build_moves(picks, places):
 
     return moves
 
+
+def format_equation(solution_digits, left, right, result, operator):
+    left_digits, right_digits, result_digits = split_solution_digits(
+        solution_digits,
+        left,
+        right,
+        result
+    )
+
+    left_text = "".join(str(digit) for digit in left_digits)
+    right_text = "".join(str(digit) for digit in right_digits)
+    result_text = "".join(str(digit) for digit in result_digits)
+
+    return left_text + " " + operator + " " + right_text + " = " + result_text
+
+
+def solution_move_count(solution):
+    return len(solution["picks"])
+
+
+def build_json_output(problem, max_k, state, left, right, result, operator):
+    output = create_empty_output(problem, max_k)
+
+    output["nodes_visited"] = state["nodes_visited"]
+    output["nodes_pruned"] = state["nodes_pruned"]
+
+    for solution in state["solutions"]:
+        k = solution_move_count(solution)
+
+        if k < 1 or k > max_k:
+            continue
+
+        key = str(k)
+
+        solution_object = {
+            "equation": format_equation(
+                solution["digits"],
+                left,
+                right,
+                result,
+                operator
+            ),
+            "picks": solution["picks"],
+            "places": solution["places"],
+            "moves": solution["moves"],
+            "nodes_visited": state["nodes_visited"],
+            "nodes_pruned": state["nodes_pruned"]
+        }
+
+        output["solutions"][key].append(solution_object)
+        output["counts"][key] += 1
+
+    return output
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -579,6 +633,20 @@ def main():
     for solution in state["solutions"]:
         print(solution["digits"], solution["picks"], solution["places"], solution["moves"])
     print()
+
+    final_output = build_json_output(
+    args.problem,
+    args.max_k,
+    state,
+    left,
+    right,
+    result,
+    operator_transition["target_operator"]
+)
+
+    print()
+    print("FINAL JSON OUTPUT")
+    print(json.dumps(final_output, indent=2, ensure_ascii=False))
 
     
 if __name__ == "__main__":
