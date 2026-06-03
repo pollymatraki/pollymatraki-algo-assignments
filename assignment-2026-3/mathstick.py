@@ -373,11 +373,13 @@ def do_slot(
                 moves = build_moves(picks, places)
 
                 state["solutions"].append({
-                    "digits": solution_digits,
-                    "picks": picks,
-                    "places": places,
-                    "moves": moves
-                })
+                        "digits": solution_digits,
+                        "picks": picks,
+                        "places": places,
+                        "moves": moves,
+                        "nodes_visited": state["nodes_visited"],
+                        "nodes_pruned": state["nodes_pruned"]
+                    })
 
         return
 
