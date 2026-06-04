@@ -618,8 +618,6 @@ def main():
 
         for solution in state["solutions"]:
             solution["operator"] = target_operator
-            solution["nodes_visited"] = state["nodes_visited"]
-            solution["nodes_pruned"] = state["nodes_pruned"]
             all_solutions.append(solution)
 
     final_state = create_search_state()
