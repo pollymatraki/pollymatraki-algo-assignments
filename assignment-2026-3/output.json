@@ -1,0 +1,95 @@
+{
+  "problem": "2 + 4 = 9",
+  "max_k": 2,
+  "counts": {
+    "1": 2,
+    "2": 3
+  },
+  "nodes_visited": 76,
+  "nodes_pruned": 225,
+  "solutions": {
+    "1": [
+      {
+        "equation": "2 + 4 = 6",
+        "picks": [
+          "C2"
+        ],
+        "places": [
+          "C5"
+        ],
+        "moves": [
+          "Move(C2, C5)"
+        ],
+        "nodes_visited": 12,
+        "nodes_pruned": 24
+      },
+      {
+        "equation": "2 + 7 = 9",
+        "picks": [
+          "B0"
+        ],
+        "places": [
+          "B1"
+        ],
+        "moves": [
+          "Move(B0, B1)"
+        ],
+        "nodes_visited": 20,
+        "nodes_pruned": 39
+      }
+    ],
+    "2": [
+      {
+        "equation": "2 + 3 = 5",
+        "picks": [
+          "B6",
+          "C2"
+        ],
+        "places": [
+          "B1",
+          "B4"
+        ],
+        "moves": [
+          "Move(B6, B1)",
+          "Move(C2, B4)"
+        ],
+        "nodes_visited": 9,
+        "nodes_pruned": 16
+      },
+      {
+        "equation": "5 + 4 = 9",
+        "picks": [
+          "A2",
+          "A5"
+        ],
+        "places": [
+          "A3",
+          "A6"
+        ],
+        "moves": [
+          "Move(A2, A3)",
+          "Move(A5, A6)"
+        ],
+        "nodes_visited": 33,
+        "nodes_pruned": 74
+      },
+      {
+        "equation": "8 + 1 = 9",
+        "picks": [
+          "B0",
+          "B6"
+        ],
+        "places": [
+          "A3",
+          "A6"
+        ],
+        "moves": [
+          "Move(B0, A3)",
+          "Move(B6, A6)"
+        ],
+        "nodes_visited": 40,
+        "nodes_pruned": 97
+      }
+    ]
+  }
+}

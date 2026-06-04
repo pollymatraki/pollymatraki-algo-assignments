@@ -568,6 +568,14 @@ def build_json_output(problem, max_k, state, left, right, result):
         output["counts"][key] += 1
 
     return output
+def save_json_output(output):
+    with open("output.json", "w", encoding="utf-8") as f:
+        json.dump(
+            output,
+            f,
+            indent=2,
+            ensure_ascii=False
+        )
 
 def main():
     parser = argparse.ArgumentParser()
@@ -635,6 +643,7 @@ def main():
     )
 
     print(json.dumps(final_output, indent=2, ensure_ascii=False))
+    save_json_output(final_output)
 
     
 if __name__ == "__main__":
