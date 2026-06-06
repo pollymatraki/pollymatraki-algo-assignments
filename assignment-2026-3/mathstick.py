@@ -542,6 +542,16 @@ def build_json_output(problem, max_k, state, left, right, result):
     output["nodes_pruned"] = state["nodes_pruned"]
 
     for solution in state["solutions"]:
+        solution_key = (
+        tuple(solution["digits"]),
+        target_operator
+        )
+
+    if solution_key in seen:
+        continue
+
+        seen.add(solution_key)
+        
         k = solution_move_count(solution)
 
         if k < 1 or k > max_k:
@@ -648,5 +658,7 @@ def main():
 
     
 if __name__ == "__main__":
-    main()
+    all_solutions = []
+    seen = set()
+
     
