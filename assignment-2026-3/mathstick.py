@@ -651,20 +651,11 @@ def print_comparison_result(problem, result):
         "PASS" if result["pruned_match"] else "FAIL"
     )
 
-
-
-def main():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument("--problem", required=True)
-    parser.add_argument("--max-k", type=int, default=2)
-
-    args = parser.parse_args()
-
-    left, operator, right, result = parse_problem(args.problem)
+def solve_problem(problem, max_k):
+    left, operator, right, result = parse_problem(problem)
 
     slots = create_slots(left, right, result)
-    transitions = build_digit_transitions(args.max_k)
+    transitions = build_digit_transitions(max_k)
 
     intervals = compute_slot_delta_intervals(slots, transitions)
     suffixes = compute_suffix_intervals(intervals)
@@ -673,8 +664,8 @@ def main():
     seen = set()
 
     total_visited = 0
-    total_pruned = 0    
-    
+    total_pruned = 0
+
     for target_operator in ["+", "-"]:
         operator_transition = get_operator_transition(
             operator,
@@ -689,7 +680,7 @@ def main():
             transitions,
             suffixes,
             operator_transition,
-            args.max_k,
+            max_k,
             [],
             0,
             0,
@@ -704,36 +695,62 @@ def main():
 
         for solution in state["solutions"]:
             solution_key = (
-            tuple(solution["digits"]),
-            target_operator
+                tuple(solution["digits"]),
+                target_operator
             )
 
-        if solution_key in seen:
-            continue
+            if solution_key in seen:
+                continue
 
-        seen.add(solution_key)
+            seen.add(solution_key)
 
-        solution["operator"] = target_operator
+            solution["operator"] = target_operator
 
-        all_solutions.append(solution)
+            all_solutions.append(solution)
 
     final_state = create_search_state()
     final_state["solutions"] = all_solutions
     final_state["nodes_visited"] = total_visited
     final_state["nodes_pruned"] = total_pruned
 
-    final_output = build_json_output(
-        args.problem,
-        args.max_k,
+    return build_json_output(
+        problem,
+        max_k,
         final_state,
         left,
         right,
         result
     )
 
-    print(json.dumps(final_output, indent=2, ensure_ascii=False))
-    save_json_output(final_output)
-    print_benchmark_summary(final_output)
+def main():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--problem")
+    parser.add_argument("--benchmark")
+    parser.add_argument("--max-k", type=int, default=2)
+
+    args = parser.parse_args()
+
+    if args.problem:
+        final_output = solve_problem(
+            args.problem,
+            args.max_k
+        )
+
+        print(
+            json.dumps(
+                final_output,
+                indent=2,
+                ensure_ascii=False
+            )
+        )
+
+        save_json_output(final_output)
+
+        print_benchmark_summary(final_output)
+
+    else:
+        print("Please provide --problem")    
 
     
 if __name__ == "__main__":
