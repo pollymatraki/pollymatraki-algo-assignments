@@ -542,16 +542,6 @@ def build_json_output(problem, max_k, state, left, right, result):
     output["nodes_pruned"] = state["nodes_pruned"]
 
     for solution in state["solutions"]:
-        solution_key = (
-        tuple(solution["digits"]),
-        target_operator
-        )
-
-    if solution_key in seen:
-        continue
-
-        seen.add(solution_key)
-        
         k = solution_move_count(solution)
 
         if k < 1 or k > max_k:
@@ -578,15 +568,17 @@ def build_json_output(problem, max_k, state, left, right, result):
         output["counts"][key] += 1
 
     return output
+
+
 def save_json_output(output):
-    with open("output.json", "w", encoding="utf-8") as f:
+    with open("output.json", "w", encoding="utf-8") as file:
         json.dump(
             output,
-            f,
+            file,
             indent=2,
             ensure_ascii=False
         )
-
+        
 def main():
     parser = argparse.ArgumentParser()
 
