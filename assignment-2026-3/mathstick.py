@@ -605,6 +605,54 @@ def print_benchmark_summary(output):
             output["counts"][k]
         )
 
+def load_jsonl_file(filename):
+    records = []
+
+    with open(filename, "r", encoding="utf-8") as file:
+        for line in file:
+            line = line.strip()
+
+            if line:
+                records.append(json.loads(line))
+
+    return records
+
+def compare_benchmark(expected, actual):
+    expected_counts = expected["solution_num"]
+
+    actual_counts = []
+
+    for k in sorted(actual["counts"].keys()):
+        actual_counts.append(actual["counts"][k])
+
+    return {
+        "counts_match": expected_counts == actual_counts,
+        "visited_match": expected["nodes_visited"] == actual["nodes_visited"],
+        "pruned_match": expected["nodes_pruned"] == actual["nodes_pruned"]
+    }
+
+def print_comparison_result(problem, result):
+    print()
+
+    print("Problem:", problem)
+
+    print(
+        "Counts:",
+        "PASS" if result["counts_match"] else "FAIL"
+    )
+
+    print(
+        "Visited:",
+        "PASS" if result["visited_match"] else "FAIL"
+    )
+
+    print(
+        "Pruned:",
+        "PASS" if result["pruned_match"] else "FAIL"
+    )
+
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -686,52 +734,6 @@ def main():
     print(json.dumps(final_output, indent=2, ensure_ascii=False))
     save_json_output(final_output)
     print_benchmark_summary(final_output)
-
-def load_jsonl_file(filename):
-    records = []
-
-    with open(filename, "r", encoding="utf-8") as file:
-        for line in file:
-            line = line.strip()
-
-            if line:
-                records.append(json.loads(line))
-
-    return records
-
-def compare_benchmark(expected, actual):
-    expected_counts = expected["solution_num"]
-
-    actual_counts = []
-
-    for k in sorted(actual["counts"].keys()):
-        actual_counts.append(actual["counts"][k])
-
-    return {
-        "counts_match": expected_counts == actual_counts,
-        "visited_match": expected["nodes_visited"] == actual["nodes_visited"],
-        "pruned_match": expected["nodes_pruned"] == actual["nodes_pruned"]
-    }
-
-def print_comparison_result(problem, result):
-    print()
-
-    print("Problem:", problem)
-
-    print(
-        "Counts:",
-        "PASS" if result["counts_match"] else "FAIL"
-    )
-
-    print(
-        "Visited:",
-        "PASS" if result["visited_match"] else "FAIL"
-    )
-
-    print(
-        "Pruned:",
-        "PASS" if result["pruned_match"] else "FAIL"
-    )
 
     
 if __name__ == "__main__":
