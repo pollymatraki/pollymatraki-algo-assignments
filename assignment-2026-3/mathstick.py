@@ -754,7 +754,7 @@ def main():
 
     
 if __name__ == "__main__":
-    all_solutions = []
+    main()
     
 
     
