@@ -578,7 +578,7 @@ def save_json_output(output):
             indent=2,
             ensure_ascii=False
         )
-        
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -596,9 +596,11 @@ def main():
     suffixes = compute_suffix_intervals(intervals)
 
     all_solutions = []
-    total_visited = 0
-    total_pruned = 0
+    seen = set()
 
+    total_visited = 0
+    total_pruned = 0    
+    
     for target_operator in ["+", "-"]:
         operator_transition = get_operator_transition(
             operator,
@@ -627,8 +629,19 @@ def main():
         total_pruned += state["nodes_pruned"]
 
         for solution in state["solutions"]:
-            solution["operator"] = target_operator
-            all_solutions.append(solution)
+            solution_key = (
+            tuple(solution["digits"]),
+            target_operator
+            )
+
+        if solution_key in seen:
+            continue
+
+        seen.add(solution_key)
+
+        solution["operator"] = target_operator
+
+        all_solutions.append(solution)
 
     final_state = create_search_state()
     final_state["solutions"] = all_solutions
@@ -651,6 +664,6 @@ def main():
     
 if __name__ == "__main__":
     all_solutions = []
-    seen = set()
+    
 
     
