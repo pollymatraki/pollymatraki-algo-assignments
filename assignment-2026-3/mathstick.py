@@ -578,6 +578,17 @@ def save_json_output(output):
             indent=2,
             ensure_ascii=False
         )
+def benchmark_summary(output):
+    counts = []
+
+    for k in sorted(output["counts"].keys()):
+        counts.append(output["counts"][k])
+
+    return {
+        "counts": counts,
+        "nodes_visited": output["nodes_visited"],
+        "nodes_pruned": output["nodes_pruned"]
+    }
 
 def main():
     parser = argparse.ArgumentParser()
