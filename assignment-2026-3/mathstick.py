@@ -747,7 +747,7 @@ def main():
 
         save_json_output(final_output)
 
-        print_benchmark_summary(final_output)
+        #print_benchmark_summary(final_output)
 
     else:
         print("Please provide --problem")    
